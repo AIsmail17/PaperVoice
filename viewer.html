@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PaperVoice</title>
+  <link rel="icon" href="icons/icon32.png">
+  <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+  <header id="topbar">
+    <button id="btn-outline" class="icon-btn" title="Sections (O)" aria-label="Toggle sections panel">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+    </button>
+    <div class="brand"><span class="logo"></span>PaperVoice</div>
+    <div id="doc-title" title=""></div>
+    <div class="spacer"></div>
+    <div class="zoom" role="group" aria-label="Zoom">
+      <button id="zoom-out" class="icon-btn" title="Zoom out">−</button>
+      <button id="zoom-label" class="text-btn" title="Fit to width">Fit</button>
+      <button id="zoom-in" class="icon-btn" title="Zoom in">+</button>
+    </div>
+    <button id="btn-open" class="text-btn" title="Open a PDF file">Open PDF</button>
+    <input id="file-input" type="file" accept="application/pdf,.pdf" hidden>
+    <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <div id="layout">
+    <aside id="outline" class="panel" hidden>
+      <div class="panel-head">Sections</div>
+      <p class="panel-hint">Click a title to read from it. Tick sections to read only those.</p>
+      <div id="outline-list"></div>
+    </aside>
+
+    <main id="viewer" tabindex="-1">
+      <div id="pages"></div>
+      <div id="empty">
+        <div class="drop">
+          <div class="drop-icon"></div>
+          <h1>Drop a PDF here</h1>
+          <p>or <button id="btn-open-2" class="link-btn">choose a file</button></p>
+          <p class="muted">Tip: on any PDF tab, click the PaperVoice toolbar button (Alt+Shift+R),<br>or right-click a PDF link → “Read PDF aloud with PaperVoice”.</p>
+        </div>
+      </div>
+      <div id="loading" hidden><div class="spinner"></div><span id="loading-text">Loading…</span></div>
+      <button id="btn-jump" hidden>Jump to reading position</button>
+    </main>
+
+    <aside id="settings" class="panel" hidden>
+      <div class="panel-head">Settings <button id="settings-close" class="icon-btn small" aria-label="Close">✕</button></div>
+
+      <label class="field">Voice engine
+        <select id="engine">
+          <option value="kokoro">Kokoro natural voices (free, runs on this computer)</option>
+          <option value="gemini">Gemini natural voices (API key)</option>
+          <option value="browser">Built-in system voices (basic)</option>
+        </select>
+      </label>
+
+      <div id="kokoro-opts" hidden>
+        <label class="field">Voice <select id="kokoroVoice"></select></label>
+        <label class="field">Run on <select id="kokoroDevice"></select></label>
+        <p class="muted small">Free and unlimited. The voice model downloads once from Hugging Face, then works offline.
+          Your papers never leave this computer.</p>
+        <p id="kokoro-status" class="small kokoro-status"></p>
+      </div>
+
+      <div id="gemini-opts" hidden>
+        <label class="field">Gemini API key
+          <input id="geminiKey" type="password" placeholder="Paste your key" autocomplete="off" spellcheck="false">
+        </label>
+        <p class="muted small">Get a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
+          It is stored only in this browser and sent only to Google. Reading uses your Gemini quota.</p>
+        <label class="field">Voice <select id="geminiVoice"></select></label>
+        <label class="field">Model <select id="geminiModel"></select></label>
+        <label class="field">Speaking style <button id="style-reset" class="link-btn small" type="button">reset</button>
+          <textarea id="geminiStyle" rows="2" spellcheck="false"></textarea>
+        </label>
+      </div>
+
+      <div id="browser-opts">
+        <label class="field">Voice
+          <select id="voice"></select>
+        </label>
+        <p class="muted small">More voices: Windows Settings → Time &amp; language → Speech</p>
+        <label class="field">Pitch <output id="pitch-val">1.0</output>
+          <input id="pitch" type="range" min="0.5" max="1.5" step="0.05">
+        </label>
+      </div>
+      <div class="row"><button id="voice-test" class="text-btn">Test voice</button></div>
+      <label class="field">Volume <output id="volume-val">100%</output>
+        <input id="volume" type="range" min="0.1" max="1" step="0.05">
+      </label>
+
+      <div class="group-title">Skip while reading</div>
+      <label class="switch"><input type="checkbox" id="skipFurniture"><span></span>Page headers, footers &amp; numbers</label>
+      <label class="switch"><input type="checkbox" id="skipOther"><span></span>Equations, tables &amp; figure text</label>
+      <label class="switch"><input type="checkbox" id="skipCaptions"><span></span>Figure &amp; table captions</label>
+      <label class="switch"><input type="checkbox" id="skipReferences"><span></span>Reference list</label>
+      <label class="switch"><input type="checkbox" id="skipFront"><span></span>Author names &amp; affiliations</label>
+      <label class="switch"><input type="checkbox" id="skipFootnotes"><span></span>Footnotes</label>
+      <label class="switch"><input type="checkbox" id="skipCitations"><span></span>Inline citations like [12] or (Smith, 2020)</label>
+      <label class="switch"><input type="checkbox" id="readHeadings"><span></span>Read section headings</label>
+
+      <div class="group-title">Display</div>
+      <label class="switch"><input type="checkbox" id="darkPages"><span></span>Dark pages</label>
+      <label class="switch"><input type="checkbox" id="follow"><span></span>Auto-scroll with the voice</label>
+      <label class="switch"><input type="checkbox" id="showCaption"><span></span>Show the spoken sentence in the player</label>
+      <label class="switch"><input type="checkbox" id="showBoxes"><span></span>Outline detected paragraphs</label>
+
+      <div class="group-title">Browser</div>
+      <label class="switch"><input type="checkbox" id="autoOpen"><span></span>Open every PDF in PaperVoice automatically</label>
+
+      <div class="group-title">Shortcuts</div>
+      <dl class="keys">
+        <dt>Space</dt><dd>Play / pause</dd>
+        <dt>← →</dt><dd>Previous / next sentence</dd>
+        <dt>Shift + ← →</dt><dd>Previous / next paragraph</dd>
+        <dt>− =</dt><dd>Slower / faster</dd>
+        <dt>Click</dt><dd>Read from that paragraph</dd>
+        <dt>Ctrl + Click</dt><dd>Select / unselect paragraph</dd>
+        <dt>Shift + Click</dt><dd>Select a range of paragraphs</dd>
+        <dt>Esc</dt><dd>Clear selection</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <footer id="player">
+    <div id="caption" aria-live="off"><span id="cap-before"></span><mark id="cap-word"></mark><span id="cap-after"></span></div>
+    <div class="controls">
+      <div class="transport">
+        <button id="prev-block" class="icon-btn" title="Previous paragraph (Shift+←)" aria-label="Previous paragraph">
+          <svg viewBox="0 0 24 24"><path d="M6 5v14M19 5l-9 7 9 7z" class="fill"/></svg>
+        </button>
+        <button id="prev-sent" class="icon-btn" title="Previous sentence (←)" aria-label="Previous sentence">
+          <svg viewBox="0 0 24 24"><path d="M11 6l-7 6 7 6zM20 6l-7 6 7 6z" class="fill"/></svg>
+        </button>
+        <button id="play" class="play-btn" title="Play / pause (Space)" aria-label="Play">
+          <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>
+          <svg class="i-pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+        </button>
+        <button id="next-sent" class="icon-btn" title="Next sentence (→)" aria-label="Next sentence">
+          <svg viewBox="0 0 24 24"><path d="M13 6l7 6-7 6zM4 6l7 6-7 6z" class="fill"/></svg>
+        </button>
+        <button id="next-block" class="icon-btn" title="Next paragraph (Shift+→)" aria-label="Next paragraph">
+          <svg viewBox="0 0 24 24"><path d="M18 5v14M5 5l9 7-9 7z" class="fill"/></svg>
+        </button>
+      </div>
+
+      <div class="progress-wrap">
+        <div id="progress" title="Click to jump"><div id="progress-fill"></div></div>
+        <div class="meta"><span id="pos-label">—</span><span id="selection-chip" hidden></span><span id="time-label"></span></div>
+      </div>
+
+      <div class="speed">
+        <button id="speed-down" class="icon-btn small" title="Slower (−)" aria-label="Slower">−</button>
+        <button id="speed-label" class="speed-label" title="Reading speed">1.0×</button>
+        <button id="speed-up" class="icon-btn small" title="Faster (=)" aria-label="Faster">+</button>
+        <div id="speed-pop" hidden>
+          <input id="speed-range" type="range" min="0.5" max="3" step="0.05">
+          <div class="chips"></div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast" role="status"></div>
+  <script type="module" src="viewer.js"></script>
+</body>
+</html>

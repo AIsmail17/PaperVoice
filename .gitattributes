@@ -1,0 +1,4 @@
+* text=auto
+*.wasm binary
+*.png binary
+lib/** -diff linguist-vendored
